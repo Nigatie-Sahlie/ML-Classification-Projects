@@ -9,40 +9,26 @@ from sklearn.metrics import precision_recall_curve, average_precision_score, roc
 def lead_data(path):
     return pd.read_csv(path)
 
+#the relation of the features using correlation and scatter plot
+def correlation_plot(data):
+    cor = data.corr()
+    plt.figure(figsize=(20, 10))
+    sns.heatmap(cor, annot=True, fmt=".1f", cmap='coolwarm')
+    plt.title("Correlation Heatmap of Features")
+    plt.show()
 
-#Calculating the outlier of the datast
-def detect_outlier(data, cols):
-    if isinstance(cols, str):
-        cols = [cols]
+#for scatter plot
+def scatter_plot(data, x1, y1, x2, y2, hue=None):
+    fig, axis = plt.subplots(1, 2, sharex=False, figsize=(20, 6))
+    first, second = axis
+    sns.scatterplot(data=data, x=x1, y=y1, hue=hue, ax=first)
+    sns.scatterplot(data=data, x=x2, y=y2, hue=hue, ax=second)
+    first.set_title(f'Scatter Plot of {y1} vs {x1}')
+    second.set_title(f'Scatter Plot of {y2} vs {x2}')
+    plt.show()
 
-    q1 = data[cols].quantile(0.25)
-    q3 = data[cols].quantile(0.75)
-    iqr = q3 - q1
-    lb = q1 - (1.5 * iqr)
-    ub = q3 + (1.5 * iqr)
-
-    outlier_mask = (data[cols] < lb) | (data[cols] > ub)
-    outlier_rows = data[outlier_mask.any(axis=1)]
-    outlier_cols = outlier_mask.any(axis=0)
-    outlier_data = outlier_rows.loc[:, outlier_cols]
-
-    return outlier_rows, outlier_data, outlier_mask
-
-def outlier_handler(data, cols, method="remove"):
-    outlier_rows, _, mask = detect_outlier(data, cols)
-
-    if method == "remove":
-        return data.drop(index=outlier_rows.index)
-
-    if method == "flag":
-        data = data.copy()
-        data["is_outlier"] = mask.any(axis=1)
-        return data
-
-
-#Graphs and Plots
+#using subplot to show the the data distribution(for fraud and legitmate transaction)
 def sub_plot(data1, data2, nrow, ncol, x, y, collection):
-    # 1. Create the grid
     fig, axs = plt.subplots(nrow, ncol, figsize=(x, y))
     fig.suptitle("Fraud vs Legitimate Transactions per Feature", fontsize=16)
     
@@ -56,27 +42,54 @@ def sub_plot(data1, data2, nrow, ncol, x, y, collection):
         
         # 4. Set titles and labels for the specific subplot
         axs_flat[2*i].set_title(f'{name} of Fraud')
-        axs_flat[(2*i)+1].set_title(f"{name} of Legitmate")
+        axs_flat[(2*i)+1].set_title(f"{name} of Legitimate")
 
-    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+    plt.tight_layout()
 
-def sub_plot1(data, nrow, ncol, x, y, collections):
+#distribution of data for both histogram, boxplot and violine plot
+def sub_plots(data, collections, nrow=3):
 
-    fig, axs = plt.subplots(nrow, ncol, figsize=(x, y))
+    fig, axs = plt.subplots(nrow, len(collections), figsize=(len(collections)*5, len(collections)*(5/3)))
     fig.suptitle("Data Distribution using Histogram", fontsize=16)
     
     # 2. Flatten the axes so we can use a single index (i)
     axs_flat = axs.flatten()
 
     for i, name in enumerate(collections):
-        sns.histplot(data[name], ax=axs_flat[3*i], kde=True, color='orange', alpha=1, label="Hist")
-        sns.boxenplot(x=data[name], ax=axs_flat[(3*i)+1], color="green")
-        sns.violinplot(x=data[name], ax=axs_flat[(3*i)+2])
-        axs_flat[(3*i)].set_title(f'Histogram of {name}')
-        axs_flat[(3*i)+1].set_title(f'Boxenplot of {name}')
-        axs_flat[(3*i)+2].set_title(f'Violinplot of {name}')
-
+        sns.histplot(data[name], ax=axs_flat[i], kde=True, color='orange', alpha=1, label="Hist")
+        sns.boxenplot(x=data[name], ax=axs_flat[len(collections)+i], color="green")
+        sns.violinplot(x=data[name], ax=axs_flat[(2*len(collections))+i])
+        axs_flat[i].set_title(f'Histogram of {name}')
+        axs_flat[len(collections)+i].set_title(f'Boxenplot of {name}')
+        axs_flat[(2*len(collections))+i].set_title(f'Violinplot of {name}')
     plt.tight_layout()
+
+#Calculating the outlier of the datast
+def detect_outlier(data, cols):
+    q1 = data[cols].quantile(0.25)
+    q3 = data[cols].quantile(0.75)
+    iqr = q3 - q1
+    lb = q1 - (1.5 * iqr)
+    ub = q3 + (1.5 * iqr)
+
+    outlier_mask = (data[cols] < lb) | (data[cols] > ub)
+    outlier_rows = data[outlier_mask.any(axis=1)]
+    outlier_cols = outlier_mask.any(axis=0)
+    outlier_data = outlier_rows.loc[:, outlier_cols]
+
+    return outlier_rows, outlier_data, outlier_mask
+
+#to handle the outlier of the dataset using the above detector method
+def outlier_handler(data, cols, method="remove"):
+    outlier_rows, _, mask = detect_outlier(data, cols)
+
+    if method == "remove":
+        return data.drop(index=outlier_rows.index)
+
+    if method == "flag":
+        data = data.copy()
+        data["is_outlier"] = mask.any(axis=1)
+        return data
 
 def box_plot(data, nrow, ncol, x, y, collections):
     fig, axis = plt.subplots(nrow, ncol, figsize=(x, y))
@@ -113,7 +126,6 @@ def accuracy_recall(predicted, actual, dataset = "test"):
     plt.show()
 
 #confuion matrix
-
 def confusionM_RP_plot(actual, predicted, model ="__", dataset="__"):
     from sklearn.metrics import confusion_matrix, recall_score, accuracy_score, precision_score, precision_recall_curve, average_precision_score
     print(f"total of obsercation: {len(actual)}")
