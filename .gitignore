@@ -1,0 +1,9 @@
+#files 
+text.txt 
+# creditcard.csv
+data/
+catboost_info/
+
+
+#vs setup file
+__pycache__/
