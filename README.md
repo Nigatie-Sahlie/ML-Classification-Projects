@@ -22,15 +22,14 @@ This project demonstrates end-to-end ML classification workflows, including:
 The main focus is understanding how different classifiers behave on **imbalanced classification problems**.
 
 ---
-
 ## 📂 Repository Structure
-
+```
 ML-Classification-Projects/
 ├── notebooks/        # Jupyter notebooks for experiments and visualizations
 ├── src/              # Helper scripts
 ├── requirements.txt  # Python dependencies
 └── README.md         # Project documentation
-
+```
 
 ## 🧠 Models Implemented
 
