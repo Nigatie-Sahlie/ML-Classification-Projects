@@ -1,9 +1,8 @@
 
-```
 # ML-Classification-Projects
 
 A collection of Machine Learning classification models and experiments implemented in Python and Jupyter Notebooks.  
-This repository explores different classification algorithms on imbalanced datasets (e.g., fraud detection) and compares their performance using confusion matrices and precision–recall curves.
+This repository explores different classification algorithms on imbalanced datasets (fraud detection) and compares their performance using confusion matrices and precision–recall curves.
 
 ---
 
@@ -26,17 +25,12 @@ The main focus is understanding how different classifiers behave on **imbalanced
 
 ## 📂 Repository Structure
 
-```
-
 ML-Classification-Projects/
 ├── notebooks/        # Jupyter notebooks for experiments and visualizations
-├── src/              # Helper scripts (if available)
+├── src/              # Helper scripts
 ├── requirements.txt  # Python dependencies
 └── README.md         # Project documentation
 
-````
-
----
 
 ## 🧠 Models Implemented
 
@@ -48,10 +42,6 @@ ML-Classification-Projects/
   - Baseline linear classifier
   - Interpretable and simple
   - Used for comparison with KNN
-
-> You can extend this project with:
-> Random Forest, XGBoost, LightGBM, SVM, or Neural Networks.
-
 ---
 
 ## 📈 Evaluation Metrics
@@ -72,7 +62,7 @@ These metrics are especially important for **fraud detection and anomaly detecti
 
 ## 🛠 Installation & Setup
 
-1️⃣ Clone the repository:
+1️⃣ Clone the repository and download the dataset on Kaggle(Link on License section):
 ```bash
 git clone https://github.com/Nigatie-Sahlie/ML-Classification-Projects.git
 cd ML-Classification-Projects
@@ -142,9 +132,3 @@ GitHub: [https://github.com/Nigatie-Sahlie](https://github.com/Nigatie-Sahlie)
 
 ```
 
----
-
-If you want, I can also:
-- Add **GitHub badges** (Python version, stars, license), or  
-- Write a short **project description** for your GitHub profile or portfolio.
-```
