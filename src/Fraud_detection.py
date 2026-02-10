@@ -104,10 +104,10 @@ def scaler(train, test, type=None):
     return train_scaled, test_scaled
 
 #some pipeline for linear models
-def train_models(x_train, y_train, which_model=None, params=None):
+def train_models(x_train, y_train, weight=None, which_model=None, params=None):
     match which_model:
         case "Log_regression":
-            model = LogisticRegression()
+            model = LogisticRegression(class_weight=weight)
             return model.fit(x_train, y_train)
         case "KNN":
             model = KNeighborsClassifier()
@@ -131,8 +131,10 @@ def train_models(x_train, y_train, which_model=None, params=None):
             print(" please Specify a valid model")
 
 #make prediction
-def predict_model(model, features):
-    return model.predict(features)
+def predict_model(model, x_train, x_test):
+    train_pred = model.predict(x_train)
+    test_pred = model.predict(x_test)
+    return train_pred, test_pred
 
 #confuion matrix
 def confusionM_RP_plot(train_actual, train_predicted, test_actual, test_predicted, model ="__"):
@@ -234,3 +236,107 @@ def accuracy_recall_on_ax(predicted, actual, ax, label=None, title=None, color=N
             print("Invalid selector. Please use 'PR' or 'ROC'.")
 
    
+#catBoost model
+def catBoostModel(x_train, y_train):
+   model = CatBoostClassifier(
+    loss_function='Logloss',
+    eval_metric='PRAUC',
+    auto_class_weights='Balanced',
+    random_seed=42, verbose=0)
+   return model.fit(x_train, y_train)   
+
+#Controling overfiting
+def cont_overfit(x_train, y_train):
+    model = CatBoostClassifier(
+        loss_function='Logloss',
+        eval_metric='PRAUC',
+        auto_class_weights='Balanced',
+
+        iterations=800,
+        depth=6,
+        learning_rate=0.03,
+        l2_leaf_reg=5,
+        subsample=0.8,
+
+        min_data_in_leaf=50,
+        random_strength=1,
+
+        early_stopping_rounds=50,
+        random_seed=42,
+        verbose=200
+    )
+    return model.fit(x_train, y_train)
+
+#parameter tunning
+def param_tunning(x_train, y_train, x_test, y_test):
+    from itertools import product
+
+    param_grid = {
+        "depth": [4, 6, 8],
+        "l2_leaf_reg": [3, 5, 10],
+        "learning_rate": [0.01, 0.03],
+        "subsample": [0.7, 0.8]
+    }
+
+    best_score = -1
+    best_params = None
+
+    for depth, l2, lr, subsample in product(
+        param_grid["depth"],
+        param_grid["l2_leaf_reg"],
+        param_grid["learning_rate"],
+        param_grid["subsample"]
+    ):
+        model = CatBoostClassifier(
+            loss_function='Logloss',
+            eval_metric='PRAUC',
+            auto_class_weights='Balanced',
+
+            iterations=1000,
+            depth=depth,
+            learning_rate=lr,
+            l2_leaf_reg=l2,
+            subsample=subsample,
+
+            early_stopping_rounds=50,
+            random_seed=42,
+            verbose=False
+        )
+
+        model.fit(x_train, y_train, eval_set=(x_test, y_test))
+
+        y_val_prob = model.predict_proba(x_test)[:, 1]
+        pr_auc = average_precision_score(y_test, y_val_prob)
+
+        if pr_auc > best_score:
+            best_score = pr_auc
+            best_params = {
+                "depth": depth,
+                "l2_leaf_reg": l2,
+                "learning_rate": lr,
+                "subsample": subsample
+            }
+
+    print("Best PR-AUC:", best_score)
+    print("Best Params:", best_params)
+    return best_score, best_params
+
+#final train with the best parameters
+def final_train(x_train, y_train, best_params):
+    best_model = CatBoostClassifier(
+    loss_function='Logloss',
+    eval_metric='PRAUC',
+    auto_class_weights='Balanced',
+
+    iterations=1500,
+    depth=best_params["depth"],
+    learning_rate=best_params["learning_rate"],
+    l2_leaf_reg=best_params["l2_leaf_reg"],
+    subsample=best_params["subsample"],
+
+    early_stopping_rounds=50,
+    random_seed=42,
+    verbose=200
+)
+
+    return best_model.fit(x_train, y_train)
